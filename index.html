@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Pro Manager Suite: Ultimate Edition</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+    /* --- 1. CONFIG VARIABLES --- */
+    :root {
+        --primary: #4361ee; 
+        --primary-dark: #3a0ca3; 
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning-bg: #fffbeb;
+        --warning-text: #b45309;
+        --warning-border: #fcd34d;
+        --bg-body: #f8f9fa; 
+        --surface: #ffffff;
+        --text-main: #1f2937; 
+        --text-muted: #6b7280;
+        --border-color: #e5e7eb;
+        
+        --radius-xl: 20px;
+        --radius-lg: 16px; 
+        --radius-md: 12px; 
+        
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* --- 2. GLOBAL RESET --- */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+        font-family: 'Outfit', sans-serif; 
+        background-color: var(--bg-body);
+        background-image: radial-gradient(#cbd5e1 1px, transparent 1px); 
+        background-size: 24px 24px;
+        color: var(--text-main); 
+        margin: 0; padding: 0; 
+        display: flex; flex-direction: column; align-items: center;
+        min-height: 100vh;
+    }
+
+    /* --- 3. HEADER COMPONENT --- */
+    .sponsor-header {
+        width: 100%; background: rgba(255, 255, 255, 0.95);
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 20px; display: flex; justify-content: center;
+        position: sticky; top: 0; z-index: 1000; 
+        backdrop-filter: blur(8px); box-shadow: var(--shadow-sm);
+    }
+    .sponsor-content { display: flex; align-items: center; gap: 15px; max-width: 900px; width: 100%; }
+    .brand-logo-container { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #111; }
+    .logo-x { font-size: 1.8rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .brand-name { font-weight: 800; font-size: 1.3rem; letter-spacing: -0.5px; }
+    .brand-separator { width: 1px; height: 20px; background: #d1d5db; }
+    .brand-slogan { font-style: italic; font-size: 0.9rem; color: var(--text-muted); }
+
+    /* --- 4. MAIN LAYOUT --- */
+    .container {
+        max-width: 900px; width: 94%; background: var(--surface);
+        padding: 40px; border-radius: var(--radius-xl); 
+        box-shadow: var(--shadow-lg);
+        margin: 30px 0 60px 0; border: 1px solid #fff;
+    }
+    
+    h1 { 
+        text-align: center; margin: 0 0 8px 0; 
+        font-size: 2rem; font-weight: 800; letter-spacing: -1px; 
+        color: var(--text-main); /* Warna standar untuk emoji */
+    }
+    
+    /* Class baru khusus untuk teks agar bergradasi */
+    .text-gradient {
+        background: linear-gradient(135deg, var(--text-main) 0%, var(--primary) 100%);
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .subtitle { 
+        text-align: center; color: var(--text-muted); margin: 0 0 35px 0; 
+        font-size: 1rem; font-weight: 400; 
+    }
+
+    /* --- 5. FORMS & INPUTS --- */
+    .input-wrapper {
+        position: relative; margin-bottom: 25px;
+        background: #f9fafb; border-radius: var(--radius-lg);
+        padding: 6px; border: 1px solid var(--border-color); transition: 0.3s ease;
+    }
+    .input-wrapper:focus-within { 
+        border-color: var(--primary); background: #fff; 
+        box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15); 
+    }
+    textarea {
+        width: 100%; height: 160px; padding: 15px; border: none; background: transparent;
+        font-family: 'Outfit', monospace; font-size: 14px; outline: none; resize: vertical;
+        color: var(--text-main); line-height: 1.6;
+    }
+
+    .generator-options {
+        display: flex; gap: 15px; margin-bottom: 30px; justify-content: center; align-items: center;
+        background: #eff6ff; padding: 15px; border-radius: var(--radius-md); border: 1px solid #bfdbfe;
+    }
+    .format-label { font-weight: 700; color: #1e40af; font-size: 0.95rem; }
+    .format-select {
+        padding: 10px 30px 10px 15px; border-radius: 8px; border: 1px solid #93c5fd;
+        font-family: 'Outfit', sans-serif; font-weight: 600; color: #1e3a8a;
+        background: #fff; cursor: pointer; outline: none; font-size: 0.95rem;
+    }
+
+    /* --- 6. BUTTONS --- */
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px; }
+    .btn {
+        padding: 12px 24px; border: none; border-radius: var(--radius-md);
+        cursor: pointer; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.3px;
+        transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        min-width: 140px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25); }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+    .btn-secondary { background: #fff; color: var(--text-main); border: 1px solid var(--border-color); }
+    .btn-secondary:hover { background: #f9fafb; border-color: #d1d5db; }
+    .btn-ghost { background: transparent; color: var(--danger); border: 1px solid transparent; min-width: auto; }
+    .btn-ghost:hover { background: #fef2f2; border-color: #fecaca; }
+
+    /* --- 7. TEAM CARDS --- */
+    .teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 50px; }
+    .team-box { 
+        background: #fff; border-radius: var(--radius-lg); overflow: hidden; 
+        border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); 
+        transition: 0.3s; 
+    }
+    .team-box:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); border-color: #cbd5e1; }
+    
+    .team-header {
+        padding: 15px; text-align: center; 
+        background: linear-gradient(to bottom, #f8fafc, #fff);
+        border-bottom: 1px solid #f1f5f9; 
+        display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .team-title { font-weight: 800; font-size: 1.1rem; color: var(--text-main); }
+    
+    .btn-load-team {
+        background: #4f46e5; color: white; border: none; padding: 8px 20px; border-radius: 50px; 
+        font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        cursor: pointer; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); transition: 0.2s; width: 100%;
+    }
+    .btn-load-team:hover { background: #4338ca; transform: scale(1.02); }
+
+    .team-list { list-style: none; padding: 15px 20px; margin: 0; font-size: 0.95rem; }
+    .team-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; }
+    .team-list li:last-child { border-bottom: none; }
+    
+    .pos-badge { font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .role-gk { background: #fef2f2; color: #b91c1c; }
+    .role-def { background: #eef2ff; color: #4338ca; }
+    .role-mid { background: #ecfdf5; color: #047857; }
+    .role-fwd { background: #fff7ed; color: #c2410c; }
+    
+    .removed-container { display: none; background: #fff; border-left: 4px solid var(--danger); color: #991b1b; padding: 15px; border-radius: var(--radius-sm); margin-bottom: 25px; font-size: 0.95rem; box-shadow: var(--shadow-sm); }
+
+    /* --- 8. TACTICAL BOARD --- */
+    .divider { display: flex; align-items: center; margin: 40px 0; gap: 15px; }
+    .divider::before, .divider::after { content: ""; height: 1px; background: var(--border-color); flex: 1; }
+    .divider span { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; background: #f3f4f6; padding: 5px 15px; border-radius: 20px; }
+
+    .board-wrapper { 
+        background: #fff; padding: 30px; border-radius: 24px; 
+        border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); 
+        display: flex; flex-direction: column; align-items: center; 
+    }
+
+    .mode-switcher { display: flex; background: #f1f5f9; padding: 5px; border-radius: 12px; margin-bottom: 20px; width: 100%; max-width: 600px; gap: 5px; }
+    .mode-btn {
+        flex: 1; border: none; background: transparent; padding: 10px;
+        border-radius: 8px; color: var(--text-muted); font-weight: 600; font-size: 0.85rem;
+        cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .mode-btn.active { background: #fff; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-weight: 800; }
+
+    /* Manual Control Toolbar */
+    .manual-tools {
+        display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center;
+        background: #f8fafc; padding: 12px; border-radius: 16px; border: 1px solid #e2e8f0;
+        margin-bottom: 25px; width: 100%; max-width: 750px;
+        position: relative;
+    }
+
+    /* --- NEW: ALERT BOX STYLE --- */
+    .manual-tip {
+        width: 100%;
+        flex-basis: 100%;
+        background-color: var(--warning-bg);
+        border: 1px solid var(--warning-border);
+        color: var(--warning-text);
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .manual-input {
+        padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 10px;
+        font-family: 'Outfit', sans-serif; width: 180px; outline: none; font-size: 0.9rem;
+    }
+    .manual-select {
+        padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 10px;
+        font-family: 'Outfit', sans-serif; outline: none; background: white; font-size: 0.9rem; cursor: pointer;
+    }
+    .manual-input:focus, .manual-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1); }
+    
+    .btn-icon {
+        background: var(--primary); color: white; border: none; width: 42px; height: 42px;
+        border-radius: 10px; font-size: 1.4rem; cursor: pointer; display: flex;
+        align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0;
+    }
+    .btn-icon:hover { background: var(--primary-dark); transform: scale(1.05); }
+    
+    .btn-clear-board {
+        background: #fee2e2; color: #dc2626; font-size: 0.85rem; width: auto; padding: 0 15px; font-weight: 600;
+    }
+    .btn-clear-board:hover { background: #fecaca; transform: none; }
+
+    .btn-save {
+        background: var(--success); color: white; border: none; 
+        padding: 12px 30px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; 
+        cursor: pointer; display: flex; align-items: center; gap: 10px; 
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); margin-bottom: 25px;
+        transition: transform 0.1s; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .btn-save:active { transform: scale(0.98); }
+
+    /* Field Visuals */
+    .field-container {
+        position: relative; width: 100%; max-width: 800px; aspect-ratio: 16 / 10;
+        background-color: #34d399; 
+        background-image: linear-gradient(90deg, transparent 49%, rgba(255,255,255,0.3) 50%, transparent 51%), 
+                          repeating-linear-gradient(to right, #34d399, #34d399 10%, #10b981 10%, #10b981 20%);
+        border: 4px solid #fff; box-shadow: 0 20px 30px -10px rgba(0,0,0,0.2), inset 0 0 80px rgba(0,0,0,0.1);
+        border-radius: 12px; user-select: none; transition: background 0.5s ease; overflow: hidden; /* Prevent overflow */
+    }
+    .field-container.futsal-mode {
+        background-color: #3b82f6;
+        background-image: radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 60%), 
+                          linear-gradient(to right, #3b82f6, #2563eb);
+        border-color: #bfdbfe;
+    }
+
+    /* Lines & Markings */
+    .line, .center-circle, .penalty-box-left, .penalty-box-right, .halfway-line { position: absolute; border: 2px solid rgba(255,255,255,0.8); pointer-events: none; }
+    .halfway-line { width: 2px; height: 100%; left: 50%; top: 0; transform: translateX(-50%); border: none; background: rgba(255,255,255,0.8); }
+    .center-circle { width: 14%; height: auto; aspect-ratio: 1/1; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .center-spot { width: 6px; height: 6px; background: #fff; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); position: absolute; pointer-events: none; }
+    .penalty-box-left { width: 15%; height: 50%; border-left: none; top: 50%; left: 0; transform: translateY(-50%); }
+    .penalty-box-right { width: 15%; height: 50%; border-right: none; top: 50%; right: 0; transform: translateY(-50%); }
+
+    /* Player Token */
+    .token {
+        width: 44px; height: 44px;
+        background: radial-gradient(circle at 30% 30%, #ffffff, #e5e7eb);
+        color: #1f2937; border: 3px solid #3b82f6; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        position: absolute; cursor: grab; z-index: 10;
+        touch-action: none; /* Critical for mobile drag */
+        transition: background 0.3s, box-shadow 0.3s, transform 0.1s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2), inset 0 2px 3px rgba(255,255,255,1);
+    }
+    .token span.t-pos { font-weight: 900; font-size: 12px; line-height: 1; text-transform: uppercase; pointer-events: none; }
+    .token span.t-name {
+        position: absolute; top: 120%; left: 50%; transform: translateX(-50%);
+        background: rgba(15, 23, 42, 0.95); color: #fff;
+        padding: 4px 12px; border-radius: 20px;
+        font-size: 11px; font-weight: 600; white-space: nowrap;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); pointer-events: none;
+        z-index: 20; display: none;
+    }
+    .token.is-dragging { cursor: grabbing; transform: scale(1.15); z-index: 1000; border-color: #2563eb; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+    .token.gk-token { border-color: #dc2626; color: #991b1b; background: radial-gradient(circle at 30% 30%, #fee2e2, #fecaca); }
+    .token.hidden { display: none; }
+
+    /* --- 9. MOBILE RESPONSIVE --- */
+    @media (max-width: 650px) {
+        .container { padding: 25px 20px; width: 100%; margin: 0; border-radius: 0; box-shadow: none; border-left: none; border-right: none; }
+        .sponsor-content { flex-direction: column; text-align: center; gap: 10px; }
+        .brand-separator { width: 40px; height: 1px; margin: 2px auto; }
+        
+        .token { width: 38px; height: 38px; border-width: 2px; }
+        .token span.t-pos { font-size: 10px; }
+        .token span.t-name { font-size: 10px; padding: 3px 8px; }
+        
+        .controls, .generator-options { flex-direction: column; gap: 10px; }
+        .btn, .format-select { width: 100%; }
+        textarea { height: 130px; }
+        
+        .manual-tools { flex-direction: column; gap: 10px; padding: 15px; }
+        .manual-input, .manual-select, .btn-icon { width: 100%; }
+        .board-wrapper { padding: 15px; }
+    }
+/* --- FOOTER --- */
+.app-footer {
+    width: 100%;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+    background: transparent;
+}
+
+.footer-card {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    padding: 30px 25px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.footer-title {
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin-bottom: 18px;
+    color: var(--text-main);
+}
+
+.footer-title span {
+    color: var(--primary);
+}
+
+.footer-qr {
+    display: inline-flex;
+    padding: 14px;
+    background: #f9fafb;
+    border-radius: 16px;
+    border: 1px dashed #cbd5e1;
+    transition: all 0.25s ease;
+}
+
+.footer-qr:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+    background: #fff;
+}
+
+.footer-qr img {
+    width: 140px;
+    height: auto;
+    border-radius: 12px;
+}
+
+.footer-desc {
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<header class="sponsor-header">
+    <div class="sponsor-content">
+        <a href="https://xunivid.wordpress.com/" target="_blank" class="brand-logo-container">
+            <span class="logo-x">✖</span> <span class="brand-name">UNIV.</span>
+        </a>
+        <div class="brand-separator"></div>
+        <span class="brand-slogan">"Durability meets style"</span>
+    </div>
+</header>
+
+<div class="container">
+    <h1> ⚽ Football Suite</h1>
+    <p class="subtitle">Generator Tim & Papan Strategi Taktikal</p>
+
+    <div class="input-wrapper">
+        <textarea id="inputNames" placeholder="Ketik nama pemain di sini (Satu nama per baris).&#10;Format: 'Nama' atau 'Nama - Posisi'&#10;&#10;Contoh Pengisian:&#10;1. Andi - GK&#10;2. Budi - GK&#10;3. Citra&#10;4. Doni"></textarea>
+    </div>
+
+    <div class="generator-options">
+        <span class="format-label">Pilih Format Permainan:</span>
+        <select id="formatSelect" class="format-select">
+            <option value="mini">Mini Soccer (8 vs 8)</option>
+            <option value="futsal">Futsal (5 vs 5)</option>
+            <option value="football">Football (11 vs 11)</option>
+        </select>
+    </div>
+
+    <div class="controls">
+        <button id="btnGenerate" class="btn btn-primary">⚡ ACAK TIM</button>
+        <button id="btnFill" class="btn btn-secondary">📝 CONTOH DATA</button>
+        <button id="btnClear" class="btn btn-ghost">🗑️ RESET</button>
+    </div>
+
+    <div id="removedContainer" class="removed-container"></div>
+    <div id="teamsContainer" class="teams"></div>
+
+    <div class="divider"><span>Tactical Board</span></div>
+
+    <div class="board-wrapper">
+        <div class="mode-switcher">
+            <button class="mode-btn active" id="btnMiniSoccer">Mini (8v8)</button>
+            <button class="mode-btn" id="btnFootball">Full (11v11)</button>
+            <button class="mode-btn" id="btnFutsal">Futsal (5v5)</button>
+        </div>
+
+        <div class="manual-tools">
+            <div class="manual-tip">
+                💡 <b>Tips:</b> Klik tombol <b>"🧹 Clear"</b> terlebih dahulu jika ingin menyusun pemain dari nol.
+            </div>
+
+            <input type="text" id="manualName" class="manual-input" placeholder="Nama Pemain..." maxlength="12">
+            <select id="manualPos" class="manual-select">
+                <option value="GK">GK (Kiper)</option>
+                <option value="CB">CB (Bek Tengah)</option>
+                <option value="LB">LB (Bek Kiri)</option>
+                <option value="RB">RB (Bek Kanan)</option>
+                <option value="CM">CM (Tengah)</option>
+                <option value="LM">LM (Sayap Kiri)</option>
+                <option value="RM">RM (Sayap Kanan)</option>
+                <option value="ST">ST (Striker)</option>
+                <option value="ANC">ANC (Anchor)</option>
+                <option value="PIV">PIV (Pivot)</option>
+                <option value="FL">FL (Flank)</option>
+            </select>
+            <button id="btnAddManual" class="btn-icon" title="Tambah ke Lapangan">+</button>
+            <button id="btnClearBoard" class="btn-icon btn-clear-board" title="Bersihkan Lapangan">🧹 Clear</button>
+        </div>
+        
+        <button class="btn-save" id="btnSaveStrategy">📷 SIMPAN STRATEGI</button>
+        
+        <div class="field-container" id="soccerField">
+            <div class="line halfway-line"></div>
+            <div class="center-circle"></div>
+            <div class="center-spot"></div>
+            <div class="penalty-box-left"></div>
+            <div class="penalty-box-right"></div>
+
+            <div class="token gk-token" id="t-gk" style="top:45%; left:2%;"><span class="t-pos">GK</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-lb" style="top:20%; left:20%;"><span class="t-pos">LB</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-cb" style="top:35%; left:18%;"><span class="t-pos">CB</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-cb2" style="top:55%; left:18%;"><span class="t-pos">CB</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-rb" style="top:70%; left:20%;"><span class="t-pos">RB</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-lm" style="top:15%; left:50%;"><span class="t-pos">LM</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-cm" style="top:35%; left:45%;"><span class="t-pos">CM</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-cm2" style="top:55%; left:45%;"><span class="t-pos">CM</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-rm" style="top:75%; left:50%;"><span class="t-pos">RM</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-st" style="top:35%; left:75%;"><span class="t-pos">ST</span><span class="t-name">Player</span></div>
+            <div class="token" id="t-st2" style="top:55%; left:75%;"><span class="t-pos">ST</span><span class="t-name">Player</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    
+    // --- STATE VARIABLES ---
+    let generatedTeamsData = [];
+    let manualTokenCount = 0; 
+    
+    // --- DOM ELEMENTS ---
+    const fieldContainer = document.getElementById('soccerField');
+    const inputNames = document.getElementById('inputNames');
+    
+    // --- HELPER FUNCTIONS ---
+    function shuffle(arr){ for(let i=arr.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i], arr[j]]=[arr[j], arr[i]]; } return arr; }
+    function parseLines(text){ return text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0); }
+    
+    // Regex updated to handle "1. Name", "1) Name", "- Name"
+    function cleanName(raw) { return raw.replace(/^[\d\-\.\)\s]+/, '').trim(); }
+    
+    function getRoleClass(pos) {
+        if(pos === 'GK') return 'role-gk';
+        if(['CB', 'LB', 'RB', 'ANC'].includes(pos)) return 'role-def'; 
+        if(['DMF', 'CM', 'AMF', 'MF', 'FL', 'FR', 'LM', 'RM'].includes(pos)) return 'role-mid'; 
+        return 'role-fwd'; 
+    }
+
+    // --- CORE 1: TEAM GENERATOR LOGIC ---
+    function generateTeams(){
+        const formatSelect = document.getElementById('formatSelect').value; 
+        const rawLines = parseLines(inputNames.value);
+        
+        if(rawLines.length < 4){ alert('⚠️ Masukkan minimal 4 pemain untuk mengacak.'); return; }
+
+        // Parse Data
+        let players = rawLines.map((r, i) => {
+            // Check for separator like " - " or "-"
+            const hyphenIndex = r.lastIndexOf('-'); 
+            let name, pos;
+            
+            if(hyphenIndex > 0) {
+                // Assuming "Name - Pos"
+                let potentialPos = r.slice(hyphenIndex + 1).trim().toUpperCase();
+                // Check if the part after hyphen is short enough to be a position (max 4 chars)
+                if(potentialPos.length <= 4) {
+                    name = cleanName(r.slice(0, hyphenIndex));
+                    pos = potentialPos;
+                } else {
+                     // Maybe it's a hyphenated name like "Jean-Paul"
+                     name = cleanName(r);
+                     pos = '';
+                }
+            } else { 
+                name = cleanName(r); 
+                pos = ''; 
+            }
+            
+            if(!name) name = `P${i+1}`;
+            return { name, pos };
+        });
+
+        // Config
+        let playersPerTeam = 8;
+        let positionsTemplate = [];
+
+        if (formatSelect === 'futsal') {
+            playersPerTeam = 5;
+            positionsTemplate = ['ANC', 'PIV', 'FL', 'FL']; 
+        } else if (formatSelect === 'mini') {
+            playersPerTeam = 8;
+            positionsTemplate = ['CB', 'LB', 'RB', 'CM', 'LM', 'RM', 'ST'];
+        } else if (formatSelect === 'football') {
+            playersPerTeam = 11;
+            positionsTemplate = ['CB', 'CB', 'LB', 'RB', 'CM', 'CM', 'LM', 'RM', 'ST', 'ST'];
+        }
+
+        let totalPlayers = players.length;
+        let numberOfTeams = Math.max(2, Math.round(totalPlayers / playersPerTeam));
+        
+        // Split GK
+        let GKs = players.filter(p => p.pos === 'GK');
+        let others = players.filter(p => p.pos !== 'GK');
+
+        // Ensure at least one GK per team if possible
+        if(others.length > 0) {
+            while(GKs.length < numberOfTeams && others.length > 0) {
+                let candidate = others.shift(); 
+                candidate.pos = 'GK'; // Forced GK
+                GKs.push(candidate);
+            }
+        }
+
+        const teams = [];
+        for(let i=0; i<numberOfTeams; i++) { teams.push([]); }
+
+        // Distribute GK first
+        GKs.forEach((gk, i) => { 
+            if(teams[i % numberOfTeams]) teams[i % numberOfTeams].push(gk); 
+        });
+
+        // Distribute Outfield
+        others = shuffle(others);
+        
+        // Round Robin distribution to ensure even teams
+        let teamIndex = 0;
+        let neededPositions = teams.map(() => [...positionsTemplate]);
+
+        while(others.length > 0) {
+            let p = others.shift();
+            
+            // Assign Position
+            if(neededPositions[teamIndex].length > 0) {
+                p.pos = neededPositions[teamIndex].shift();
+            } else {
+                p.pos = 'SUB';
+            }
+            
+            teams[teamIndex].push(p);
+            
+            // Next team
+            teamIndex = (teamIndex + 1) % numberOfTeams;
+        }
+
+        generatedTeamsData = teams; 
+        renderTeams(teams); 
+        renderRemoved(others); // Should be empty with round robin, but kept for safety
+        
+        document.getElementById('teamsContainer').scrollIntoView({behavior: 'smooth'});
+        
+        // Auto Set Board Mode
+        setMode(formatSelect === 'futsal' ? 'futsal' : formatSelect === 'football' ? 'football' : 'mini');
+    }
+
+    function renderTeams(teams){
+        const container = document.getElementById('teamsContainer');
+        container.innerHTML = ''; 
+        teams.forEach((team, i) => {
+            if(team.length === 0) return;
+            const box = document.createElement('div'); box.className = 'team-box';
+            
+            const header = document.createElement('div'); header.className = 'team-header';
+            header.innerHTML = `
+                <span class="team-title">TIM ${i + 1} <small>(${team.length})</small></span>
+                <button class="btn-load-team" data-index="${i}">🚀 Pasang Strategi</button>
+            `;
+            box.appendChild(header);
+
+            const ul = document.createElement('ul'); ul.className = 'team-list';
+            team.forEach(p => {
+                const li = document.createElement('li');
+                const nameSpan = document.createElement('span'); nameSpan.textContent = p.name;
+                const posBadge = document.createElement('span'); 
+                posBadge.className = `pos-badge ${getRoleClass(p.pos)}`;
+                posBadge.textContent = p.pos;
+                
+                li.appendChild(nameSpan); li.appendChild(posBadge);
+                ul.appendChild(li);
+            });
+            box.appendChild(ul); container.appendChild(box);
+        });
+
+        // Add event listeners to dynamic buttons
+        document.querySelectorAll('.btn-load-team').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                loadTeamToBoard(parseInt(e.target.dataset.index));
+            });
+        });
+    }
+
+    function renderRemoved(list){
+        const container = document.getElementById('removedContainer');
+        if(list.length > 0){
+            container.style.display = 'block';
+            container.innerHTML = '';
+            const strong = document.createElement('strong'); strong.textContent = "⚠️ Cadangan / Antrian: ";
+            container.appendChild(strong);
+            container.append(list.map(p => p.name).join(', '));
+        } else { container.style.display = 'none'; }
+    }
+
+    // --- CORE 2: BOARD LOGIC (SMART LOAD) ---
+    function loadTeamToBoard(teamIndex) {
+        if(!generatedTeamsData[teamIndex]) return;
+        const team = generatedTeamsData[teamIndex];
+        const formatSelect = document.getElementById('formatSelect').value;
+        
+        setMode(formatSelect === 'futsal' ? 'futsal' : formatSelect === 'football' ? 'football' : 'mini');
+
+        resetTokenText(formatSelect);
+        clearManualTokens(); 
+
+        const positionMap = {
+            'GK': ['t-gk'],
+            'CB': ['t-cb', 't-cb2', 't-lb', 't-rb'], 'ANC': ['t-cb'], 
+            'LB': ['t-lb', 't-cb2'], 'RB': ['t-rb', 't-cb2'],
+            'CM': ['t-cm', 't-cm2', 't-lm', 't-rm'], 'DMF': ['t-cm'], 
+            'LM': ['t-lm', 't-cm'], 'LW': ['t-lm'], 'FL': ['t-lm', 't-rm'], 
+            'RM': ['t-rm', 't-cm2'], 'RW': ['t-rm'], 'FR': ['t-rm', 't-lm'],
+            'ST': ['t-st', 't-st2'], 'CF': ['t-st'], 'PIV': ['t-st'], 'SUB': []
+        };
+
+        let usedTokens = {};
+
+        team.forEach(player => {
+            let pos = player.pos.toUpperCase();
+            if (pos === 'SUB') return; // Skip subs
+
+            let targets = positionMap[pos] || [];
+            let assignedTokenId = null;
+            
+            // Priority 1: Specific Slot
+            for(let id of targets) {
+                let el = document.getElementById(id);
+                if(el && !el.classList.contains('hidden') && !usedTokens[id]) { 
+                    assignedTokenId = id; break; 
+                }
+            }
+            
+            // Priority 2: Any Empty Slot
+            if(!assignedTokenId) {
+                const allTokens = ['t-gk','t-lb','t-cb','t-cb2','t-rb','t-lm','t-cm','t-cm2','t-rm','t-st','t-st2'];
+                for(let id of allTokens) {
+                    let el = document.getElementById(id);
+                    if(el && !el.classList.contains('hidden') && !usedTokens[id] && pos !== 'GK') { 
+                        assignedTokenId = id; break; 
+                    }
+                }
+            }
+
+            if(assignedTokenId) {
+                usedTokens[assignedTokenId] = true;
+                const el = document.getElementById(assignedTokenId);
+                const posSpan = el.querySelector('.t-pos');
+                const nameSpan = el.querySelector('.t-name');
+                
+                posSpan.textContent = pos;
+                nameSpan.textContent = player.name;
+                nameSpan.style.display = 'block'; 
+
+                // Styling
+                if(pos === 'GK') {
+                    el.classList.add('gk-token');
+                    el.style.background = "radial-gradient(circle at 30% 30%, #fee2e2, #fecaca)";
+                } else {
+                    el.classList.remove('gk-token');
+                    el.style.background = "radial-gradient(circle at 30% 30%, #ffffff, #e5e7eb)";
+                }
+            }
+        });
+        document.querySelector('.board-wrapper').scrollIntoView({behavior: 'smooth'});
+    }
+
+    function resetTokenText(mode) {
+        const labels = { 
+            't-gk':'GK', 't-lb':'LB', 't-cb':'CB', 't-cb2':'CB', 't-rb':'RB', 
+            't-lm':'LM', 't-cm':'CM', 't-cm2':'CM', 't-rm':'RM', 
+            't-st':'ST', 't-st2':'ST' 
+        };
+        
+        if(mode === 'futsal') {
+            labels['t-cb'] = 'ANC'; labels['t-st'] = 'PIV';
+            labels['t-lm'] = 'FL'; labels['t-rm'] = 'FL';
+        }
+
+        for(let id in labels) {
+            let el = document.getElementById(id);
+            if(el) {
+                el.querySelector('.t-pos').textContent = labels[id];
+                el.querySelector('.t-name').textContent = 'Player';
+                el.querySelector('.t-name').style.display = 'none';
+                el.style.background = "";
+                el.classList.remove('gk-token');
+                if(id === 't-gk') el.classList.add('gk-token');
+            }
+        }
+    }
+
+    // --- CORE 3: MANUAL ADD & CLEAR ---
+    document.getElementById('btnAddManual').addEventListener('click', function() {
+        const nameInput = document.getElementById('manualName');
+        const posInput = document.getElementById('manualPos');
+        const nameVal = nameInput.value.trim();
+        const posVal = posInput.value;
+        
+        if(!nameVal) { alert('Silakan isi nama pemain.'); return; }
+
+        manualTokenCount++;
+        const newTokenId = `manual-${manualTokenCount}`;
+        
+        const div = document.createElement('div');
+        div.className = 'token manual-token'; 
+        div.id = newTokenId;
+        div.style.top = '50%'; div.style.left = '50%';
+        div.style.zIndex = 100;
+
+        const spanPos = document.createElement('span');
+        spanPos.className = 't-pos'; spanPos.textContent = posVal;
+        
+        const spanName = document.createElement('span');
+        spanName.className = 't-name'; spanName.textContent = nameVal;
+        spanName.style.display = 'block';
+
+        div.appendChild(spanPos);
+        div.appendChild(spanName);
+
+        if(posVal === 'GK') div.classList.add('gk-token');
+
+        fieldContainer.appendChild(div);
+        setupDrag(div); // Apply drag
+        nameInput.value = '';
+    });
+
+    document.getElementById('btnClearBoard').addEventListener('click', function(){
+        const allTokens = ['t-gk','t-lb','t-cb','t-cb2','t-rb','t-lm','t-cm','t-cm2','t-rm','t-st','t-st2'];
+        toggleTokens(allTokens, false); // Hide default
+        clearManualTokens(); // Remove manual
+    });
+
+    function clearManualTokens() {
+        document.querySelectorAll('.manual-token').forEach(el => el.remove());
+    }
+
+    // --- UI EVENT LISTENERS ---
+    document.getElementById('btnGenerate').addEventListener('click', generateTeams);
+    document.getElementById('btnClear').addEventListener('click', () => {
+        document.getElementById('teamsContainer').innerHTML = '';
+        document.getElementById('removedContainer').style.display = 'none';
+        inputNames.value = '';
+    });
+    document.getElementById('btnFill').addEventListener('click', () => {
+        const sample = ['Rafi - GK', 'Dimas - GK', 'Rendra', 'Fajar', 'Dedi', 'Ilham', 'Edo', 'Jovan', 'Rizky', 'Samuel', 'Aldi', 'Riko', 'Farhan', 'Norman', 'Arga', 'Yuda', 'Bram', 'Kevin', 'Dion', 'Dimas', 'Haryo', 'Mario', 'Yoga', 'Surya', 'Rivaldo', 'Niko', 'Andra', 'Reno', 'Jordan', 'Wahyu', 'Vino', 'Reza'];
+        inputNames.value = sample.join('\n');
+    });
+
+    // --- MODE SWITCHER LOGIC ---
+    const btnMini = document.getElementById('btnMiniSoccer');
+    const btnFootball = document.getElementById('btnFootball');
+    const btnFutsal = document.getElementById('btnFutsal');
+    
+    btnMini.addEventListener('click', () => setMode('mini'));
+    btnFootball.addEventListener('click', () => setMode('football'));
+    btnFutsal.addEventListener('click', () => setMode('futsal'));
+
+    setMode('mini'); // Default
+
+    function setMode(mode) {
+        [btnMini, btnFootball, btnFutsal].forEach(b => b.classList.remove('active'));
+        fieldContainer.classList.remove('futsal-mode'); 
+
+        const allTokens = ['t-gk','t-lb','t-cb','t-cb2','t-rb','t-lm','t-cm','t-cm2','t-rm','t-st','t-st2'];
+        toggleTokens(allTokens, true); // Reset visibility
+
+        if(mode === 'mini') {
+            btnMini.classList.add('active');
+            toggleTokens(['t-cb2','t-cm2','t-st2'], false);
+            resetTokenText('mini');
+            // Preset Positions for Mini
+            moveToken('t-gk', '45%','2%'); 
+            moveToken('t-lb', '20%','20%'); moveToken('t-cb', '45%','20%'); moveToken('t-rb', '70%','20%');
+            moveToken('t-lm', '15%','50%'); moveToken('t-cm', '45%','50%'); moveToken('t-rm', '75%','50%'); 
+            moveToken('t-st', '45%','75%');
+
+        } else if (mode === 'football') {
+            btnFootball.classList.add('active');
+            resetTokenText('football');
+            // Preset Positions for Full
+            moveToken('t-gk', '45%','2%');
+            moveToken('t-lb', '10%','18%'); moveToken('t-cb', '33%','18%'); moveToken('t-cb2', '57%','18%'); moveToken('t-rb', '80%','18%');
+            moveToken('t-lm', '10%','45%'); moveToken('t-cm', '33%','45%'); moveToken('t-cm2', '57%','45%'); moveToken('t-rm', '80%','45%');
+            moveToken('t-st', '35%','75%'); moveToken('t-st2', '55%','75%');
+
+        } else {
+            btnFutsal.classList.add('active');
+            fieldContainer.classList.add('futsal-mode');
+            toggleTokens(['t-lb','t-rb','t-cb2','t-cm','t-cm2','t-st2'], false); 
+            resetTokenText('futsal');
+            // Preset Positions for Futsal
+            moveToken('t-gk', '45%','2%'); 
+            moveToken('t-cb', '45%','20%'); 
+            moveToken('t-lm', '15%','50%'); moveToken('t-rm', '75%','50%'); 
+            moveToken('t-st', '45%','75%');
+        }
+    }
+    
+    function toggleTokens(ids, show) { 
+        ids.forEach(id => { 
+            const el = document.getElementById(id);
+            if(el) el.classList.toggle('hidden', !show); 
+        }); 
+    }
+    
+    function moveToken(id, top, left) { 
+        const el = document.getElementById(id);
+        if(el) { el.style.top = top; el.style.left = left; } 
+    }
+
+    // --- SCREENSHOT LOGIC ---
+    document.getElementById('btnSaveStrategy').addEventListener('click', function() {
+        const originalText = this.innerHTML; 
+        this.innerHTML = '⏳ Menyimpan...';
+        
+        // Temporarily show names for screenshot
+        const hiddenNames = [];
+        document.querySelectorAll('.token:not(.hidden) .t-name').forEach(el => {
+            if(getComputedStyle(el).display === 'none') { 
+                el.style.display = 'block'; hiddenNames.push(el); 
+            }
+        });
+
+        html2canvas(fieldContainer, { 
+            scale: 2, 
+            backgroundColor: null,
+            logging: false,
+            useCORS: true 
+        }).then(canvas => {
+            const link = document.createElement('a'); link.download = 'strategi-tim.png';
+            link.href = canvas.toDataURL("image/png"); link.click();
+            this.innerHTML = originalText;
+            hiddenNames.forEach(el => el.style.display = 'none');
+        }).catch(err => {
+            alert('Gagal menyimpan gambar.');
+            this.innerHTML = originalText;
+            hiddenNames.forEach(el => el.style.display = 'none');
+        });
+    });
+
+    // --- DRAG AND DROP ENGINE (TOUCH SUPPORTED) ---
+    const tokens = document.querySelectorAll('.token');
+    tokens.forEach(token => setupDrag(token));
+
+    function setupDrag(elmnt) {
+        let startX, startY, startLeft, startTop;
+
+        elmnt.onmousedown = dragStart;
+        elmnt.ontouchstart = dragStart;
+
+        function dragStart(e) {
+            // Prevent scrolling on touch ONLY if touching the token
+            if(e.type === 'touchstart') {
+               // Passive listener issue prevention handled by CSS touch-action: none
+            } else {
+                e.preventDefault(); 
+            }
+
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            
+            startX = clientX;
+            startY = clientY;
+            
+            const rect = elmnt.getBoundingClientRect();
+            const parentRect = fieldContainer.getBoundingClientRect();
+            
+            startLeft = rect.left - parentRect.left;
+            startTop = rect.top - parentRect.top;
+
+            document.onmouseup = dragEnd;
+            document.onmousemove = dragMove;
+            document.ontouchend = dragEnd;
+            document.ontouchmove = dragMove;
+            
+            elmnt.classList.add('is-dragging');
+        }
+
+        function dragMove(e) {
+            // Prevent page scrolling while dragging
+            if (e.cancelable && e.type === 'touchmove') e.preventDefault();
+
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+            const deltaX = clientX - startX;
+            const deltaY = clientY - startY;
+
+            let newLeft = startLeft + deltaX;
+            let newTop = startTop + deltaY;
+
+            // Boundaries
+            const parentW = fieldContainer.clientWidth;
+            const parentH = fieldContainer.clientHeight;
+            const elW = elmnt.offsetWidth;
+            const elH = elmnt.offsetHeight;
+
+            if(newLeft < 0) newLeft = 0;
+            if(newTop < 0) newTop = 0;
+            if(newLeft > parentW - elW) newLeft = parentW - elW;
+            if(newTop > parentH - elH) newTop = parentH - elH;
+
+            // Use Percentage for Responsiveness
+            elmnt.style.left = (newLeft / parentW * 100) + '%';
+            elmnt.style.top = (newTop / parentH * 100) + '%';
+        }
+
+        function dragEnd() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            document.ontouchend = null;
+            document.ontouchmove = null;
+            elmnt.classList.remove('is-dragging');
+        }
+    }
+});
+</script>
+<footer class="app-footer">
+  <div class="footer-card">
+    <p class="footer-title">
+      ⚽ Support <span>Balad FC Strategic</span>
+    </p>
+
+    <a 
+      href="https://saweria.co/widgets/qr?streamKey=2286e9eb00e5f4f6468f69e39caec103" 
+      target="_blank"
+      class="footer-qr"
+    >
+      <img 
+        src="QR_Balad.png" 
+        alt="QR Saweria Balad FC Strategic"
+      >
+    </a>
+
+    <p class="footer-desc">
+      Scan QR untuk mendukung pengembangan<br>
+      <b>Balad FC Football Suite</b>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
