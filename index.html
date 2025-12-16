@@ -640,6 +640,7 @@
         </div>
 
         <div class="controls">
+            <button id="btnArrange" class="btn btn-secondary">🧩 Susun Tim</button>
             <button id="btnGenerate" class="btn btn-primary">⚡ Acak Tim</button>
             <button id="btnFill" class="btn btn-secondary">📝 Contoh Data</button>
             <button id="btnClear" class="btn btn-ghost">🗑️ Reset</button>
@@ -813,6 +814,121 @@
         }
 
         // --- CORE 1: TEAM GENERATOR LOGIC ---
+        function arrangeTeams() {
+            const format = document.getElementById('formatSelect').value;
+            const rawLines = parseLines(inputNames.value);
+
+            if (rawLines.length < 4) {
+                alert('⚠️ Minimal 4 pemain');
+                return;
+            }
+
+            // Parse pemain
+            let players = rawLines.map((r, i) => {
+                const parts = r.split('-');
+                let name = cleanName(parts[0]);
+                let pos = parts[1] ? parts[1].trim().toUpperCase() : 'ANY';
+                
+                // Pastikan nama unik jika tidak ada
+                if(!name) name = `P${i+1}`;
+                
+                return { name, pos };
+            });
+
+            // Konfigurasi format
+            let perTeam;
+            let positionsTemplate = [];
+
+            if (format === 'futsal') {
+                perTeam = 5;
+                positionsTemplate = ['ANC', 'PIV', 'FL', 'FL']; 
+            } else if (format === 'mini') {
+                perTeam = 8;
+                positionsTemplate = ['CB', 'LB', 'RB', 'CM', 'LM', 'RM', 'ST'];
+            } else { // football
+                perTeam = 11;
+                positionsTemplate = ['CB', 'CB', 'LB', 'RB', 'CM', 'CM', 'LM', 'RM', 'ST', 'ST'];
+            }
+
+            let teamCount = Math.max(2, Math.floor(players.length / perTeam));
+            
+            // Pisahkan GK dan Outfield
+            let GKs = players.filter(p => p.pos === 'GK');
+            let others = players.filter(p => p.pos !== 'GK');
+
+            const teams = Array.from({ length: teamCount }, () => []);
+
+            // Distribusi GK (Round Robin)
+            GKs.forEach((gk, i) => {
+                if (teams[i % teamCount]) teams[i % teamCount].push(gk);
+            });
+
+            // Distribusi Outfield dengan batasan ketat
+            let teamIndex = 0;
+            let neededPositions = teams.map(() => [...positionsTemplate]);
+            
+            // Urutkan others berdasarkan posisi agar distribusi lebih merata jika ada posisi spesifik
+            // (Opsional, tapi membantu menjaga keseimbangan posisi manual)
+            // others.sort((a, b) => a.pos.localeCompare(b.pos));
+
+            for (let p of others) {
+                // Cari tim yang belum penuh
+                let placed = false;
+                let attempts = 0;
+                
+                // Coba masukkan ke tim saat ini atau tim berikutnya
+                while(attempts < teamCount) {
+                    if (teams[teamIndex].length < perTeam) {
+                        // Assign posisi otomatis untuk keperluan visual board
+                        if(neededPositions[teamIndex].length > 0) {
+                            // Simpan posisi asli user jika ada, tapi overwrite untuk visual board mapping
+                            // Kita pakai properti baru 'displayPos' untuk visual board
+                            // p.pos tetap yang diinput user untuk list text
+                            
+                            // Tapi agar board otomatis terisi, kita harus ubah p.pos sesuai template board
+                            //Kecuali user input posisi valid (CB, LB, dll)
+                            
+                            // Cek apakah input user valid untuk format ini?
+                            // Sederhananya, kita overwrite agar board pasti muncul
+                            p.pos = neededPositions[teamIndex].shift(); 
+                        } else {
+                            p.pos = 'SUB';
+                        }
+                        
+                        teams[teamIndex].push(p);
+                        placed = true;
+                        teamIndex = (teamIndex + 1) % teamCount;
+                        break;
+                    }
+                    teamIndex = (teamIndex + 1) % teamCount;
+                    attempts++;
+                }
+            }
+
+            // Hitung pemain sisa (cadangan)
+            let allTeamPlayersID = new Set();
+            teams.forEach(t => t.forEach(pl => allTeamPlayersID.add(pl)));
+            // Karena kita memodifikasi objek player (p.pos), filter harus berdasarkan referensi objek
+            // Filter dari list 'players' awal yang belum masuk tim
+            let assignedPlayers = [];
+            teams.forEach(t => assignedPlayers = assignedPlayers.concat(t));
+            
+            let removedPlayers = players.filter(x => !assignedPlayers.includes(x));
+
+            generatedTeamsData = teams;
+            renderTeams(teams);
+            renderRemoved(removedPlayers);
+
+            document.getElementById('teamsContainer')
+                .scrollIntoView({ behavior: 'smooth' });
+            
+            // Auto set mode
+            setMode(format === 'futsal' ? 'futsal' : format === 'football' ? 'football' : 'mini');
+        }
+
+        document.getElementById('btnArrange')
+        .addEventListener('click', arrangeTeams);
+
         function generateTeams(){
             const formatSelect = document.getElementById('formatSelect').value; 
             const rawLines = parseLines(inputNames.value);
@@ -858,7 +974,7 @@
             }
 
             let totalPlayers = players.length;
-            let numberOfTeams = Math.max(2, Math.round(totalPlayers / playersPerTeam));
+            let numberOfTeams = Math.max(2, Math.floor(totalPlayers / playersPerTeam)); // Changed round to floor to be strict
             
             // Split GK
             let GKs = players.filter(p => p.pos === 'GK');
@@ -884,21 +1000,36 @@
             let teamIndex = 0;
             let neededPositions = teams.map(() => [...positionsTemplate]);
 
-            while(others.length > 0) {
-                let p = others.shift();
-                if(neededPositions[teamIndex].length > 0) {
-                    p.pos = neededPositions[teamIndex].shift();
-                } else {
-                    p.pos = 'SUB';
+            // Strict distribution loop for Random
+            for(let p of others) {
+                let attempts = 0;
+                let placed = false;
+                while(attempts < numberOfTeams) {
+                    if (teams[teamIndex].length < playersPerTeam) {
+                        if(neededPositions[teamIndex].length > 0) {
+                            p.pos = neededPositions[teamIndex].shift();
+                        } else {
+                            p.pos = 'SUB';
+                        }
+                        teams[teamIndex].push(p);
+                        placed = true;
+                        teamIndex = (teamIndex + 1) % numberOfTeams;
+                        break;
+                    }
+                    teamIndex = (teamIndex + 1) % numberOfTeams;
+                    attempts++;
                 }
-                teams[teamIndex].push(p);
-                teamIndex = (teamIndex + 1) % numberOfTeams;
             }
+            
+            // Handle leftovers
+            let assignedPlayers = [];
+            teams.forEach(t => assignedPlayers = assignedPlayers.concat(t));
+            let removedPlayers = players.filter(x => !assignedPlayers.includes(x));
 
             generatedTeamsData = teams; 
 
             renderTeams(teams); 
-            renderRemoved(others);
+            renderRemoved(removedPlayers);
             
             document.getElementById('teamsContainer').scrollIntoView({behavior: 'smooth'});
             setMode(formatSelect === 'futsal' ? 'futsal' : formatSelect === 'football' ? 'football' : 'mini');
