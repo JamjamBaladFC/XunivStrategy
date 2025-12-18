@@ -204,7 +204,7 @@
         }
         .btn-ghost:hover { background: var(--danger-bg); }
 
-        /* --- 7. TEAM CARDS --- */
+        /* --- 7. TEAM CARDS (DRAG & DROP ENABLED) --- */
         .teams {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 30px; margin-bottom: 60px;
@@ -244,12 +244,25 @@
         }
         .btn-load-team:hover { background: #4338ca; transform: scale(1.02); }
 
-        .team-list { list-style: none; padding: 15px 25px; margin: 0; font-size: 0.95rem; }
+        .team-list { 
+            list-style: none; padding: 15px 25px; margin: 0; font-size: 0.95rem; 
+            min-height: 50px; /* Allow empty list drop */
+        }
         
         .team-list li {
             display: flex; justify-content: space-between; align-items: center;
             padding: 12px 0; border-bottom: 1px solid #f1f5f9;
+            cursor: grab; /* Cursor grab for draggable items */
+            background: #fff;
+            transition: background 0.2s;
         }
+        .team-list li:hover { background: #f8fafc; }
+        .team-list li.dragging-li { 
+            opacity: 0.5; background: #eff6ff; 
+            border: 2px dashed var(--primary); 
+            border-radius: 8px;
+        }
+        
         .team-list li:last-child { border-bottom: none; }
 
         .pos-badge {
@@ -369,7 +382,6 @@
         .field-container {
             position: relative; width: 100%; max-width: 800px;
             aspect-ratio: 16 / 10;
-            /* Improved Grass Pattern */
             background-color: #34d399;
             background-image: 
                 linear-gradient(90deg, transparent 49%, rgba(255,255,255,0.2) 50%, transparent 51%), 
@@ -378,6 +390,7 @@
             box-shadow: 0 20px 40px -10px rgba(0,0,0,0.25), inset 0 0 100px rgba(0,0,0,0.15);
             border-radius: 16px; user-select: none;
             transition: background 0.5s ease; overflow: hidden;
+            touch-action: none;
         }
 
         .field-container.futsal-mode {
@@ -387,6 +400,13 @@
                 linear-gradient(to right, #3b82f6, #2563eb);
             border-color: #bfdbfe;
         }
+        
+        /* DRAWING CANVAS */
+        #drawingCanvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5; pointer-events: none;
+        }
+        .draw-active #drawingCanvas { pointer-events: auto; cursor: crosshair; }
 
         /* Lines */
         .line, .center-circle, .penalty-box-left, .penalty-box-right, .halfway-line {
@@ -420,7 +440,6 @@
         /* Player Token */
         .token {
             width: 48px; height: 48px;
-            /* 3D Coin Effect */
             background: radial-gradient(circle at 30% 30%, #ffffff, #e5e7eb);
             color: #1f2937;
             border: 4px solid #3b82f6;
@@ -431,7 +450,13 @@
             transition: transform 0.1s;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.8);
         }
-        /* Inner ring for realism */
+        /* Ball Token */
+        .token.ball { 
+            width: 30px; height: 30px; border: none; 
+            background: url('https://cdn-icons-png.flaticon.com/512/33/33736.png') no-repeat center/cover; 
+            box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+        }
+        /* Inner ring */
         .token::after {
             content: ''; position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px;
             border: 1px solid rgba(0,0,0,0.1); border-radius: 50%; pointer-events: none;
@@ -457,7 +482,6 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
         
-        /* GK Specific */
         .token.gk-token {
             border-color: #dc2626; color: #991b1b;
             background: radial-gradient(circle at 30% 30%, #fee2e2, #fecaca);
@@ -465,7 +489,7 @@
 
         .token.hidden { display: none; }
 
-        /* --- 9. MATCH RESULT CARD STYLES (NEW) --- */
+        /* --- 9. MATCH RESULT CARD STYLES --- */
        .match-tools-container {
             width: 100%; background: #f8fafc; border: 1px solid #e2e8f0;
             border-radius: 20px; padding: 30px; margin-top: 10px;
@@ -482,12 +506,15 @@
         .mom-select { width: 100%; max-width: 250px; padding: 10px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: 600; outline: none; background: #fff; font-family: 'Outfit'; }
         .sponsor-input { width: 100%; max-width: 250px; padding: 10px; border-radius: 10px; border: 1px solid #cbd5e1; font-family: 'Outfit'; }
 
-        /* Bagian Khusus Input Tanggal */
+        /* Input Tanggal */
         .date-input { 
             padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 10px; 
             font-family: 'Outfit'; color: #334155; font-weight: 500; outline: none;
             cursor: pointer; background: #fff;
         }
+
+        .file-input-wrapper { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .file-input-wrapper input { font-size: 0.8rem; width: 180px; }
 
         /* The Story Card Design (9:16 Ratio) */
         .story-preview-wrapper {
@@ -519,11 +546,14 @@
         .card-label { font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 8px; }
         .card-date { font-size: 1.2rem; font-weight: 700; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
-        .card-score-board { z-index: 2; display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 50px; width: 100%; }
-        .score-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 18px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); min-width: 75px; }
-        .score-num { font-size: 3.2rem; font-weight: 800; line-height: 1; display: block; }
-        .team-label { font-size: 0.7rem; color: #cbd5e1; text-transform: uppercase; margin-top: 8px; display: block; font-weight: 600; letter-spacing: 1px; }
-        .vs-text { font-size: 1.5rem; font-weight: 300; color: #64748b; font-style: italic; opacity: 0.8; }
+        .card-score-board { z-index: 2; display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 50px; width: 100%; }
+        .score-box { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 18px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); min-width: 65px; }
+        .score-num { font-size: 3rem; font-weight: 800; line-height: 1; display: block; }
+        
+        .card-team-logo { width: 50px; height: 50px; object-fit: contain; margin-bottom: 5px; border-radius: 50%; background:rgba(255,255,255,0.1); padding:5px; }
+        
+        .team-label { font-size: 0.7rem; color: #cbd5e1; text-transform: uppercase; margin-top: 5px; display: block; font-weight: 600; letter-spacing: 1px; }
+        .vs-text { font-size: 1.2rem; font-weight: 300; color: #64748b; font-style: italic; opacity: 0.8; }
 
         .card-mom-section { z-index: 2; width: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent); padding: 25px 0; margin-bottom: auto; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); }
         .mom-title { font-size: 0.75rem; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; font-weight: 800; margin-bottom: 12px; display: block; }
@@ -627,6 +657,7 @@
         <p class="subtitle">Generator Tim & Papan Strategi Taktikal</p>
 
         <div class="input-wrapper">
+             <div style="padding: 5px 15px; font-size:0.75rem; color:var(--success); text-align:right;">✓ Auto-Save Aktif</div>
             <textarea id="inputNames" placeholder="Ketik nama pemain di sini (Satu nama per baris).&#10;Format: 'Nama' atau 'Nama - Posisi'&#10;&#10;Contoh Pengisian:&#10;1. Andi - GK&#10;2. Budi - GK&#10;3. Citra&#10;4. Doni"></textarea>
         </div>
 
@@ -681,10 +712,16 @@
                 <button id="btnClearBoard" class="btn-icon btn-clear-board" title="Bersihkan Lapangan">🧹 Clear</button>
             </div>
             
+            <div style="margin-bottom: 20px; display:flex; gap:10px;">
+                <button id="btnToggleDraw" class="btn btn-secondary" style="font-size:0.8rem; padding:8px 20px;">✏️ Mode Coret (OFF)</button>
+                <button id="btnAddBall" class="btn btn-secondary" style="font-size:0.8rem; padding:8px 20px;">⚽ Bola</button>
+                <button id="btnClearDraw" class="btn btn-ghost" style="font-size:0.8rem;">Hapus Coretan</button>
+            </div>
+
             <button class="btn-save" id="btnSaveStrategy">📷 Simpan Strategi</button>
             
             <div class="field-container" id="soccerField">
-                <div class="line halfway-line"></div>
+                <canvas id="drawingCanvas"></canvas> <div class="line halfway-line"></div>
                 <div class="center-circle"></div>
                 <div class="center-spot"></div>
                 <div class="penalty-box-left"></div>
@@ -710,18 +747,25 @@
     <h3 style="margin-top:0; color:#1e293b; margin-bottom:20px;">Buat Kartu Pertandingan (Story IG)</h3>
     
     <div class="result-inputs">
-        <div>
-            <span class="label-text">Score A</span>
+        <div class="file-input-wrapper">
+            <span class="label-text">Logo A</span>
+            <input type="file" id="uplLogoA" accept="image/*">
+            <span class="label-text" style="margin-top:5px;">Score A</span>
             <input type="number" id="inScoreA" class="score-input" value="0" min="0">
         </div>
         <div style="display:flex; align-items:center; padding-top:25px;">
             <span style="font-weight:800; color:#cbd5e1; font-size:1.2rem;">VS</span>
         </div>
-        <div>
-            <span class="label-text">Score B</span>
+        <div class="file-input-wrapper">
+             <span class="label-text">Logo B</span>
+            <input type="file" id="uplLogoB" accept="image/*">
+            <span class="label-text" style="margin-top:5px;">Score B</span>
             <input type="number" id="inScoreB" class="score-input" value="0" min="0">
         </div>
-        <div>
+    </div>
+    
+    <div class="result-inputs">
+        <div style="width:100%; max-width:250px;">
              <span class="label-text">Tanggal Main</span>
              <input type="date" id="inDate" class="date-input">
         </div>
@@ -730,7 +774,9 @@
     <div class="result-inputs">
         <div style="width:100%; max-width:250px;">
             <span class="label-text">Man Of The Match</span>
-            <input type="text" id="momInput" class="sponsor-input" placeholder="Ketik Nama Pemain..." maxlength="18">
+            <select id="momSelect" class="mom-select">
+                <option value="">-- Pilih Pemain --</option>
+            </select>
         </div>
         <div style="width:100%; max-width:250px;">
             <span class="label-text">Sponsor Name</span>
@@ -747,11 +793,13 @@
 
             <div class="card-score-board">
                 <div style="text-align:center;">
+                    <img id="outLogoA" src="" class="card-team-logo" style="display:none;">
                     <div class="score-box"><span class="score-num" id="outScoreA">0</span></div>
                     <span class="team-label">Tim 1</span>
                 </div>
                 <div class="vs-text">VS</div>
                 <div style="text-align:center;">
+                    <img id="outLogoB" src="" class="card-team-logo" style="display:none;">
                     <div class="score-box"><span class="score-num" id="outScoreB">0</span></div>
                     <span class="team-label">Tim 2</span>
                 </div>
@@ -785,16 +833,18 @@
     <script>
     document.addEventListener('DOMContentLoaded', function(){
         
-        // --- STATE VARIABLES ---
+        // --- 1. LOCAL STORAGE & HELPER ---
+        const inputNames = document.getElementById('inputNames');
+        if(localStorage.getItem('pms_players')) {
+            inputNames.value = localStorage.getItem('pms_players');
+        }
+        inputNames.addEventListener('input', () => localStorage.setItem('pms_players', inputNames.value));
+
         let generatedTeamsData = [];
         let manualTokenCount = 0;
         
-        // --- DOM ELEMENTS ---
         const fieldContainer = document.getElementById('soccerField');
-        const inputNames = document.getElementById('inputNames');
-        // momSelector variable removed
         
-        // --- HELPER FUNCTIONS ---
         function shuffle(arr){ 
             for(let i=arr.length-1; i>0; i--){ 
                 const j=Math.floor(Math.random()*(i+1)); 
@@ -803,7 +853,6 @@
             return arr; 
         }
         function parseLines(text){ return text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0); }
-        
         function cleanName(raw) { return raw.replace(/^[\d\-\.\)\s]+/, '').trim(); }
         
         function getRoleClass(pos) {
@@ -813,206 +862,55 @@
             return 'role-fwd'; 
         }
 
-        // --- CORE 1: TEAM GENERATOR LOGIC ---
-        function arrangeTeams() {
-            const format = document.getElementById('formatSelect').value;
-            const rawLines = parseLines(inputNames.value);
-
-            if (rawLines.length < 4) {
-                alert('⚠️ Minimal 4 pemain');
-                return;
-            }
-
-            // Parse pemain
-            let players = rawLines.map((r, i) => {
-                const parts = r.split('-');
-                let name = cleanName(parts[0]);
-                let pos = parts[1] ? parts[1].trim().toUpperCase() : 'ANY';
-                
-                // Pastikan nama unik jika tidak ada
-                if(!name) name = `P${i+1}`;
-                
-                return { name, pos };
-            });
-
-            // Konfigurasi format
-            let perTeam;
-            let positionsTemplate = [];
-
-            if (format === 'futsal') {
-                perTeam = 5;
-                positionsTemplate = ['ANC', 'PIV', 'FL', 'FL']; 
-            } else if (format === 'mini') {
-                perTeam = 8;
-                positionsTemplate = ['CB', 'LB', 'RB', 'CM', 'LM', 'RM', 'ST'];
-            } else { // football
-                perTeam = 11;
-                positionsTemplate = ['CB', 'CB', 'LB', 'RB', 'CM', 'CM', 'LM', 'RM', 'ST', 'ST'];
-            }
-
-            let teamCount = Math.max(2, Math.floor(players.length / perTeam));
-            
-            // Pisahkan GK dan Outfield
-            let GKs = players.filter(p => p.pos === 'GK');
-            let others = players.filter(p => p.pos !== 'GK');
-
-            const teams = Array.from({ length: teamCount }, () => []);
-
-            // Distribusi GK (Round Robin)
-            GKs.forEach((gk, i) => {
-                if (teams[i % teamCount]) teams[i % teamCount].push(gk);
-            });
-
-            // Distribusi Outfield dengan batasan ketat
-            let teamIndex = 0;
-            let neededPositions = teams.map(() => [...positionsTemplate]);
-            
-            // Urutkan others berdasarkan posisi agar distribusi lebih merata jika ada posisi spesifik
-            // (Opsional, tapi membantu menjaga keseimbangan posisi manual)
-            // others.sort((a, b) => a.pos.localeCompare(b.pos));
-
-            for (let p of others) {
-                // Cari tim yang belum penuh
-                let placed = false;
-                let attempts = 0;
-                
-                // Coba masukkan ke tim saat ini atau tim berikutnya
-                while(attempts < teamCount) {
-                    if (teams[teamIndex].length < perTeam) {
-                        // Assign posisi otomatis untuk keperluan visual board
-                        if(neededPositions[teamIndex].length > 0) {
-                            // Simpan posisi asli user jika ada, tapi overwrite untuk visual board mapping
-                            // Kita pakai properti baru 'displayPos' untuk visual board
-                            // p.pos tetap yang diinput user untuk list text
-                            
-                            // Tapi agar board otomatis terisi, kita harus ubah p.pos sesuai template board
-                            //Kecuali user input posisi valid (CB, LB, dll)
-                            
-                            // Cek apakah input user valid untuk format ini?
-                            // Sederhananya, kita overwrite agar board pasti muncul
-                            p.pos = neededPositions[teamIndex].shift(); 
-                        } else {
-                            p.pos = 'SUB';
-                        }
-                        
-                        teams[teamIndex].push(p);
-                        placed = true;
-                        teamIndex = (teamIndex + 1) % teamCount;
-                        break;
-                    }
-                    teamIndex = (teamIndex + 1) % teamCount;
-                    attempts++;
-                }
-            }
-
-            // Hitung pemain sisa (cadangan)
-            let allTeamPlayersID = new Set();
-            teams.forEach(t => t.forEach(pl => allTeamPlayersID.add(pl)));
-            // Karena kita memodifikasi objek player (p.pos), filter harus berdasarkan referensi objek
-            // Filter dari list 'players' awal yang belum masuk tim
-            let assignedPlayers = [];
-            teams.forEach(t => assignedPlayers = assignedPlayers.concat(t));
-            
-            let removedPlayers = players.filter(x => !assignedPlayers.includes(x));
-
-            generatedTeamsData = teams;
-            renderTeams(teams);
-            renderRemoved(removedPlayers);
-
-            document.getElementById('teamsContainer')
-                .scrollIntoView({ behavior: 'smooth' });
-            
-            // Auto set mode
-            setMode(format === 'futsal' ? 'futsal' : format === 'football' ? 'football' : 'mini');
-        }
-
-        document.getElementById('btnArrange')
-        .addEventListener('click', arrangeTeams);
-
+        // --- 2. TEAM GENERATOR LOGIC ---
         function generateTeams(){
             const formatSelect = document.getElementById('formatSelect').value; 
             const rawLines = parseLines(inputNames.value);
             
             if(rawLines.length < 4){ alert('⚠️ Masukkan minimal 4 pemain untuk mengacak.'); return; }
 
-            // Parse Data
             let players = rawLines.map((r, i) => {
                 const hyphenIndex = r.lastIndexOf('-'); 
                 let name, pos;
-                
                 if(hyphenIndex > 0) {
                     let potentialPos = r.slice(hyphenIndex + 1).trim().toUpperCase();
                     if(potentialPos.length <= 4) {
-                        name = cleanName(r.slice(0, hyphenIndex));
-                        pos = potentialPos;
-                    } else {
-                        name = cleanName(r);
-                        pos = '';
-                    }
-                } else { 
-                    name = cleanName(r); 
-                    pos = ''; 
-                }
-                
+                        name = cleanName(r.slice(0, hyphenIndex)); pos = potentialPos;
+                    } else { name = cleanName(r); pos = ''; }
+                } else { name = cleanName(r); pos = ''; }
                 if(!name) name = `P${i+1}`;
-                return { name, pos };
+                return { name, pos, id: 'p-'+Math.random().toString(36).substr(2,9) };
             });
 
             // Config
-            let playersPerTeam = 8;
-            let positionsTemplate = [];
+            let playersPerTeam = formatSelect === 'futsal' ? 5 : (formatSelect === 'mini' ? 8 : 11);
+            let positionsTemplate = formatSelect === 'futsal' ? ['ANC', 'PIV', 'FL', 'FL'] : (formatSelect === 'mini' ? ['CB', 'LB', 'RB', 'CM', 'LM', 'RM', 'ST'] : ['CB', 'CB', 'LB', 'RB', 'CM', 'CM', 'LM', 'RM', 'ST', 'ST']);
 
-            if (formatSelect === 'futsal') {
-                playersPerTeam = 5;
-                positionsTemplate = ['ANC', 'PIV', 'FL', 'FL']; 
-            } else if (formatSelect === 'mini') {
-                playersPerTeam = 8;
-                positionsTemplate = ['CB', 'LB', 'RB', 'CM', 'LM', 'RM', 'ST'];
-            } else if (formatSelect === 'football') {
-                playersPerTeam = 11;
-                positionsTemplate = ['CB', 'CB', 'LB', 'RB', 'CM', 'CM', 'LM', 'RM', 'ST', 'ST'];
-            }
-
-            let totalPlayers = players.length;
-            let numberOfTeams = Math.max(2, Math.floor(totalPlayers / playersPerTeam)); // Changed round to floor to be strict
-            
-            // Split GK
+            let numberOfTeams = Math.max(2, Math.floor(players.length / playersPerTeam));
             let GKs = players.filter(p => p.pos === 'GK');
             let others = players.filter(p => p.pos !== 'GK');
 
             if(others.length > 0) {
                 while(GKs.length < numberOfTeams && others.length > 0) {
-                    let candidate = others.shift(); 
-                    candidate.pos = 'GK'; 
-                    GKs.push(candidate);
+                    let candidate = others.shift(); candidate.pos = 'GK'; GKs.push(candidate);
                 }
             }
 
-            const teams = [];
-            for(let i=0; i<numberOfTeams; i++) { teams.push([]); }
-
-            GKs.forEach((gk, i) => { 
-                if(teams[i % numberOfTeams]) teams[i % numberOfTeams].push(gk); 
-            });
-
+            const teams = Array.from({ length: numberOfTeams }, () => []);
+            GKs.forEach((gk, i) => { if(teams[i % numberOfTeams]) teams[i % numberOfTeams].push(gk); });
             others = shuffle(others);
             
             let teamIndex = 0;
             let neededPositions = teams.map(() => [...positionsTemplate]);
 
-            // Strict distribution loop for Random
             for(let p of others) {
                 let attempts = 0;
-                let placed = false;
                 while(attempts < numberOfTeams) {
                     if (teams[teamIndex].length < playersPerTeam) {
                         if(neededPositions[teamIndex].length > 0) {
                             p.pos = neededPositions[teamIndex].shift();
-                        } else {
-                            p.pos = 'SUB';
-                        }
+                        } else { p.pos = 'SUB'; }
                         teams[teamIndex].push(p);
-                        placed = true;
                         teamIndex = (teamIndex + 1) % numberOfTeams;
                         break;
                     }
@@ -1021,43 +919,56 @@
                 }
             }
             
-            // Handle leftovers
-            let assignedPlayers = [];
-            teams.forEach(t => assignedPlayers = assignedPlayers.concat(t));
+            let assignedPlayers = []; teams.forEach(t => assignedPlayers = assignedPlayers.concat(t));
             let removedPlayers = players.filter(x => !assignedPlayers.includes(x));
 
             generatedTeamsData = teams; 
-
             renderTeams(teams); 
             renderRemoved(removedPlayers);
+            updateMomDropdown(assignedPlayers);
             
             document.getElementById('teamsContainer').scrollIntoView({behavior: 'smooth'});
             setMode(formatSelect === 'futsal' ? 'futsal' : formatSelect === 'football' ? 'football' : 'mini');
         }
 
+        // --- 3. RENDER TEAMS WITH DRAG & DROP ---
         function renderTeams(teams){
             const container = document.getElementById('teamsContainer');
             container.innerHTML = ''; 
+            
             teams.forEach((team, i) => {
                 if(team.length === 0) return;
                 const box = document.createElement('div'); box.className = 'team-box';
                 
                 const header = document.createElement('div'); header.className = 'team-header';
-                header.innerHTML = `
-                    <span class="team-title">TIM ${i + 1} <small>(${team.length})</small></span>
-                    <button class="btn-load-team" data-index="${i}">🚀 Pasang Strategi</button>
-                `;
+                header.innerHTML = `<span class="team-title">TIM ${i + 1} <small>(${team.length})</small></span><button class="btn-load-team" data-index="${i}">🚀 Pasang Strategi</button>`;
                 box.appendChild(header);
 
-                const ul = document.createElement('ul'); ul.className = 'team-list';
+                const ul = document.createElement('ul'); 
+                ul.className = 'team-list';
+                ul.dataset.teamIndex = i;
+
+                // DnD Events for List
+                ul.addEventListener('dragover', e => {
+                    e.preventDefault(); 
+                    const afterElement = getDragAfterElement(ul, e.clientY);
+                    const draggable = document.querySelector('.dragging-li');
+                    if(afterElement == null) { ul.appendChild(draggable); } 
+                    else { ul.insertBefore(draggable, afterElement); }
+                });
+                
+                ul.addEventListener('drop', () => { updateTeamsDataFromDOM(); });
+
                 team.forEach(p => {
                     const li = document.createElement('li');
-                    const nameSpan = document.createElement('span'); nameSpan.textContent = p.name;
-                    const posBadge = document.createElement('span'); 
-                    posBadge.className = `pos-badge ${getRoleClass(p.pos)}`;
-                    posBadge.textContent = p.pos;
+                    li.draggable = true;
+                    li.dataset.name = p.name; li.dataset.pos = p.pos;
                     
-                    li.appendChild(nameSpan); li.appendChild(posBadge);
+                    li.innerHTML = `<span>${p.name}</span> <span class="pos-badge ${getRoleClass(p.pos)}">${p.pos}</span>`;
+                    
+                    li.addEventListener('dragstart', () => li.classList.add('dragging-li'));
+                    li.addEventListener('dragend', () => li.classList.remove('dragging-li'));
+                    
                     ul.appendChild(li);
                 });
                 box.appendChild(ul); container.appendChild(box);
@@ -1070,81 +981,92 @@
             });
         }
 
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('li:not(.dragging-li)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; } 
+                else { return closest; }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function updateTeamsDataFromDOM() {
+            const newTeams = [];
+            const allPlayers = [];
+            document.querySelectorAll('.team-list').forEach((ul, idx) => {
+                const teamArr = [];
+                ul.querySelectorAll('li').forEach(li => {
+                    const p = { name: li.dataset.name, pos: li.dataset.pos };
+                    teamArr.push(p); allPlayers.push(p);
+                });
+                newTeams.push(teamArr);
+                // Update header count
+                const header = ul.previousElementSibling;
+                if(header) header.querySelector('small').textContent = `(${teamArr.length})`;
+            });
+            generatedTeamsData = newTeams;
+            updateMomDropdown(allPlayers);
+        }
+
         function renderRemoved(list){
             const container = document.getElementById('removedContainer');
             if(list.length > 0){
-                container.style.display = 'block';
-                container.innerHTML = '';
+                container.style.display = 'block'; container.innerHTML = '';
                 const strong = document.createElement('strong'); strong.textContent = "⚠️ Cadangan / Antrian: ";
-                container.appendChild(strong);
-                container.append(list.map(p => p.name).join(', '));
+                container.appendChild(strong); container.append(list.map(p => p.name).join(', '));
             } else { container.style.display = 'none'; }
         }
 
-        // --- CORE 2: BOARD LOGIC (SMART LOAD) ---
+        // --- 4. BOARD LOGIC ---
         function loadTeamToBoard(teamIndex) {
+            // Ensure we use the latest data from DOM if available
+            updateTeamsDataFromDOM();
+            
             if(!generatedTeamsData[teamIndex]) return;
             const team = generatedTeamsData[teamIndex];
             const formatSelect = document.getElementById('formatSelect').value;
-            
             setMode(formatSelect === 'futsal' ? 'futsal' : formatSelect === 'football' ? 'football' : 'mini');
-
             resetTokenText(formatSelect);
             clearManualTokens(); 
 
+            // Mapping strategy
             const positionMap = {
                 'GK': ['t-gk'],
-                'CB': ['t-cb', 't-cb2', 't-lb', 't-rb'], 'ANC': ['t-cb'], 
+                'CB': ['t-cb', 't-cb2', 't-lb', 't-rb'],
                 'LB': ['t-lb', 't-cb2'], 'RB': ['t-rb', 't-cb2'],
-                'CM': ['t-cm', 't-cm2', 't-lm', 't-rm'], 'DMF': ['t-cm'], 
-                'LM': ['t-lm', 't-cm'], 'LW': ['t-lm'], 'FL': ['t-lm', 't-rm'], 
-                'RM': ['t-rm', 't-cm2'], 'RW': ['t-rm'], 'FR': ['t-rm', 't-lm'],
-                'ST': ['t-st', 't-st2'], 'CF': ['t-st'], 'PIV': ['t-st'], 'SUB': []
+                'CM': ['t-cm', 't-cm2', 't-lm', 't-rm'],
+                'LM': ['t-lm', 't-cm'], 'RM': ['t-rm', 't-cm2'],
+                'ST': ['t-st', 't-st2'], 'ANC': ['t-cb'], 'PIV':['t-st'], 'FL':['t-lm','t-rm']
             };
-
             let usedTokens = {};
 
             team.forEach(player => {
                 let pos = player.pos.toUpperCase();
-                if (pos === 'SUB') return; 
-
-                let targets = positionMap[pos] || [];
                 let assignedTokenId = null;
                 
-                // Priority 1: Specific Slot
+                // Try specific slot
+                let targets = positionMap[pos] || [];
                 for(let id of targets) {
                     let el = document.getElementById(id);
-                    if(el && !el.classList.contains('hidden') && !usedTokens[id]) { 
-                        assignedTokenId = id; break; 
-                    }
+                    if(el && !el.classList.contains('hidden') && !usedTokens[id]) { assignedTokenId = id; break; }
                 }
-                
-                // Priority 2: Any Empty Slot
+                // Fallback slot
                 if(!assignedTokenId) {
                     const allTokens = ['t-gk','t-lb','t-cb','t-cb2','t-rb','t-lm','t-cm','t-cm2','t-rm','t-st','t-st2'];
                     for(let id of allTokens) {
                         let el = document.getElementById(id);
-                        if(el && !el.classList.contains('hidden') && !usedTokens[id] && pos !== 'GK') { 
-                            assignedTokenId = id; break; 
-                        }
+                        if(el && !el.classList.contains('hidden') && !usedTokens[id] && pos !== 'GK') { assignedTokenId = id; break; }
                     }
                 }
 
                 if(assignedTokenId) {
                     usedTokens[assignedTokenId] = true;
                     const el = document.getElementById(assignedTokenId);
-                    const posSpan = el.querySelector('.t-pos');
-                    const nameSpan = el.querySelector('.t-name');
-                    
-                    posSpan.textContent = pos;
-                    nameSpan.textContent = player.name;
-                    nameSpan.style.display = 'block'; 
-
-                    if(pos === 'GK') {
-                        el.classList.add('gk-token');
-                    } else {
-                        el.classList.remove('gk-token');
-                    }
+                    el.querySelector('.t-pos').textContent = pos;
+                    const nameEl = el.querySelector('.t-name');
+                    nameEl.textContent = player.name; nameEl.style.display = 'block';
+                    if(pos === 'GK') el.classList.add('gk-token'); else el.classList.remove('gk-token');
                 }
             });
             document.querySelector('.board-wrapper').scrollIntoView({behavior: 'smooth'});
@@ -1153,15 +1075,11 @@
         function resetTokenText(mode) {
             const labels = { 
                 't-gk':'GK', 't-lb':'LB', 't-cb':'CB', 't-cb2':'CB', 't-rb':'RB', 
-                't-lm':'LM', 't-cm':'CM', 't-cm2':'CM', 't-rm':'RM', 
-                't-st':'ST', 't-st2':'ST' 
+                't-lm':'LM', 't-cm':'CM', 't-cm2':'CM', 't-rm':'RM', 't-st':'ST', 't-st2':'ST' 
             };
-            
             if(mode === 'futsal') {
-                labels['t-cb'] = 'ANC'; labels['t-st'] = 'PIV';
-                labels['t-lm'] = 'FL'; labels['t-rm'] = 'FL';
+                labels['t-cb'] = 'ANC'; labels['t-st'] = 'PIV'; labels['t-lm'] = 'FL'; labels['t-rm'] = 'FL';
             }
-
             for(let id in labels) {
                 let el = document.getElementById(id);
                 if(el) {
@@ -1174,258 +1092,221 @@
             }
         }
 
-        // --- CORE 3: MANUAL ADD & CLEAR ---
+        // Manual & Ball Logic
         document.getElementById('btnAddManual').addEventListener('click', function() {
-            const nameInput = document.getElementById('manualName');
-            const posInput = document.getElementById('manualPos');
-            const nameVal = nameInput.value.trim();
-            const posVal = posInput.value;
-            
-            if(!nameVal) { alert('Silakan isi nama pemain.'); return; }
+            addTokenToBoard(document.getElementById('manualName').value, document.getElementById('manualPos').value);
+        });
+        
+        document.getElementById('btnAddBall').addEventListener('click', () => {
+            const div = document.createElement('div');
+            div.className = 'token ball manual-token';
+            div.style.top = '50%'; div.style.left = '50%'; div.style.zIndex = 100;
+            fieldContainer.appendChild(div);
+            setupDrag(div);
+        });
 
+        function addTokenToBoard(nameVal, posVal) {
+            if(!nameVal) return;
             manualTokenCount++;
-            const newTokenId = `manual-${manualTokenCount}`;
-            
             const div = document.createElement('div');
             div.className = 'token manual-token'; 
-            div.id = newTokenId;
-            div.style.top = '50%'; div.style.left = '50%';
-            div.style.zIndex = 100;
-
-            const spanPos = document.createElement('span');
-            spanPos.className = 't-pos'; spanPos.textContent = posVal;
-            
-            const spanName = document.createElement('span');
-            spanName.className = 't-name'; spanName.textContent = nameVal;
-            spanName.style.display = 'block';
-
-            div.appendChild(spanPos);
-            div.appendChild(spanName);
-
+            div.style.top = '50%'; div.style.left = '50%'; div.style.zIndex = 100;
+            div.innerHTML = `<span class="t-pos">${posVal}</span><span class="t-name" style="display:block">${nameVal}</span>`;
             if(posVal === 'GK') div.classList.add('gk-token');
-
             fieldContainer.appendChild(div);
             setupDrag(div); 
-            nameInput.value = '';
-        });
+        }
 
         document.getElementById('btnClearBoard').addEventListener('click', function(){
             const allTokens = ['t-gk','t-lb','t-cb','t-cb2','t-rb','t-lm','t-cm','t-cm2','t-rm','t-st','t-st2'];
-            toggleTokens(allTokens, false); 
-            clearManualTokens(); 
+            toggleTokens(allTokens, false); clearManualTokens(); 
         });
 
-        function clearManualTokens() {
-            document.querySelectorAll('.manual-token').forEach(el => el.remove());
-        }
+        function clearManualTokens() { document.querySelectorAll('.manual-token').forEach(el => el.remove()); }
 
-        // --- UI EVENT LISTENERS ---
+        // DRAWING LOGIC
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        let painting = false;
+
+        function resizeCanvas() { canvas.width = fieldContainer.offsetWidth; canvas.height = fieldContainer.offsetHeight; }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+        document.getElementById('btnToggleDraw').addEventListener('click', function() {
+            document.body.classList.toggle('draw-active');
+            const isActive = document.body.classList.contains('draw-active');
+            this.textContent = isActive ? "✏️ Mode Coret (ON)" : "✏️ Mode Coret (OFF)";
+            this.style.background = isActive ? "var(--warning-border)" : "#fff";
+        });
+        document.getElementById('btnClearDraw').addEventListener('click', () => ctx.clearRect(0,0,canvas.width,canvas.height));
+
+        function draw(e) {
+            if(!painting) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#ffff00';
+            ctx.lineTo(clientX - rect.left, clientY - rect.top);
+            ctx.stroke(); ctx.beginPath(); ctx.moveTo(clientX - rect.left, clientY - rect.top);
+        }
+        canvas.addEventListener('mousedown', (e) => { if(document.body.classList.contains('draw-active')){ painting=true; draw(e); } });
+        canvas.addEventListener('touchstart', (e) => { if(document.body.classList.contains('draw-active')){ painting=true; draw(e); } });
+        canvas.addEventListener('mouseup', () => { painting=false; ctx.beginPath(); });
+        canvas.addEventListener('touchend', () => { painting=false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchmove', draw);
+
+        // --- 5. UI & EVENT LISTENERS ---
         document.getElementById('btnGenerate').addEventListener('click', generateTeams);
+        document.getElementById('btnArrange').addEventListener('click', generateTeams); // Alias
         document.getElementById('btnClear').addEventListener('click', () => {
             document.getElementById('teamsContainer').innerHTML = '';
             document.getElementById('removedContainer').style.display = 'none';
-            inputNames.value = '';
+            inputNames.value = ''; localStorage.removeItem('pms_players');
         });
+        
+        // --- FIXED: ADDED MORE SAMPLE DATA FOR FOOTBALL (30 Players) ---
         document.getElementById('btnFill').addEventListener('click', () => {
-            const sample = ['Rafi - GK', 'Dimas - GK', 'Rendra', 'Fajar', 'Dedi', 'Ilham', 'Edo', 'Jovan', 'Rizky', 'Samuel', 'Aldi', 'Riko', 'Farhan', 'Norman', 'Arga', 'Yuda', 'Bram', 'Kevin', 'Dion', 'Dimas', 'Haryo', 'Mario', 'Yoga', 'Surya', 'Rivaldo', 'Niko', 'Andra', 'Reno', 'Jordan', 'Wahyu', 'Vino', 'Reza'];
-            inputNames.value = sample.join('\n');
+            const sample = [
+                'Nadeo - GK', 'Ernando - GK', 'Syahrul - GK', 
+                'Asnawi', 'Arhan', 'Ridho', 'Baggott', 'Jordi', 'Sandy', 'Shayne', 'Pratama', 
+                'Marc', 'Ivar', 'Marselino', 'Ricky', 'Egy', 'Witan', 'Saddil', 'Yakob', 'Yance',
+                'Sananta', 'Dendy', 'Dimas', 'Hokky', 'Rafael', 'Spaso', 'Dedik', 'Ezra', 'Walian', 'Roni'
+            ];
+            inputNames.value = sample.join('\n'); localStorage.setItem('pms_players', inputNames.value);
         });
 
-        // --- MODE SWITCHER LOGIC ---
-        const btnMini = document.getElementById('btnMiniSoccer');
-        const btnFootball = document.getElementById('btnFootball');
-        const btnFutsal = document.getElementById('btnFutsal');
-        
+        // Mode Switcher
+        const btnMini = document.getElementById('btnMiniSoccer'), btnFootball = document.getElementById('btnFootball'), btnFutsal = document.getElementById('btnFutsal');
         btnMini.addEventListener('click', () => setMode('mini'));
         btnFootball.addEventListener('click', () => setMode('football'));
         btnFutsal.addEventListener('click', () => setMode('futsal'));
-
         setMode('mini'); 
 
         function setMode(mode) {
             [btnMini, btnFootball, btnFutsal].forEach(b => b.classList.remove('active'));
             fieldContainer.classList.remove('futsal-mode'); 
-
             const allTokens = ['t-gk','t-lb','t-cb','t-cb2','t-rb','t-lm','t-cm','t-cm2','t-rm','t-st','t-st2'];
             toggleTokens(allTokens, true); 
+            resizeCanvas();
 
             if(mode === 'mini') {
                 btnMini.classList.add('active');
-                toggleTokens(['t-cb2','t-cm2','t-st2'], false);
-                resetTokenText('mini');
-                moveToken('t-gk', '45%','2%'); 
-                moveToken('t-lb', '20%','20%'); moveToken('t-cb', '45%','20%'); moveToken('t-rb', '70%','20%');
-                moveToken('t-lm', '15%','50%'); moveToken('t-cm', '45%','50%'); moveToken('t-rm', '75%','50%'); 
-                moveToken('t-st', '45%','75%');
-
+                toggleTokens(['t-cb2','t-cm2','t-st2'], false); resetTokenText('mini');
+                moveToken('t-gk', '45%','2%'); moveToken('t-lb', '20%','20%'); moveToken('t-cb', '45%','20%'); moveToken('t-rb', '70%','20%');
+                moveToken('t-lm', '15%','50%'); moveToken('t-cm', '45%','50%'); moveToken('t-rm', '75%','50%'); moveToken('t-st', '45%','75%');
             } else if (mode === 'football') {
-                btnFootball.classList.add('active');
-                resetTokenText('football');
+                btnFootball.classList.add('active'); resetTokenText('football');
                 moveToken('t-gk', '45%','2%');
                 moveToken('t-lb', '10%','18%'); moveToken('t-cb', '33%','18%'); moveToken('t-cb2', '57%','18%'); moveToken('t-rb', '80%','18%');
                 moveToken('t-lm', '10%','45%'); moveToken('t-cm', '33%','45%'); moveToken('t-cm2', '57%','45%'); moveToken('t-rm', '80%','45%');
                 moveToken('t-st', '35%','75%'); moveToken('t-st2', '55%','75%');
-
             } else {
-                btnFutsal.classList.add('active');
-                fieldContainer.classList.add('futsal-mode');
-                toggleTokens(['t-lb','t-rb','t-cb2','t-cm','t-cm2','t-st2'], false); 
-                resetTokenText('futsal');
-                moveToken('t-gk', '45%','2%'); 
-                moveToken('t-cb', '45%','20%'); 
-                moveToken('t-lm', '15%','50%'); moveToken('t-rm', '75%','50%'); 
-                moveToken('t-st', '45%','75%');
+                btnFutsal.classList.add('active'); fieldContainer.classList.add('futsal-mode');
+                toggleTokens(['t-lb','t-rb','t-cb2','t-cm','t-cm2','t-st2'], false); resetTokenText('futsal');
+                moveToken('t-gk', '45%','2%'); moveToken('t-cb', '45%','20%'); 
+                moveToken('t-lm', '15%','50%'); moveToken('t-rm', '75%','50%'); moveToken('t-st', '45%','75%');
             }
         }
         
-        function toggleTokens(ids, show) { 
-            ids.forEach(id => { 
-                const el = document.getElementById(id);
-                if(el) el.classList.toggle('hidden', !show); 
-            }); 
-        }
-        
-        function moveToken(id, top, left) { 
-            const el = document.getElementById(id);
-            if(el) { el.style.top = top; el.style.left = left; } 
-        }
+        function toggleTokens(ids, show) { ids.forEach(id => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden', !show); }); }
+        function moveToken(id, top, left) { const el = document.getElementById(id); if(el) { el.style.top = top; el.style.left = left; } }
 
-        // --- SCREENSHOT LOGIC (TACTICS) ---
         document.getElementById('btnSaveStrategy').addEventListener('click', function() {
-            const originalText = this.innerHTML; 
-            this.innerHTML = '⏳ Menyimpan...';
-            
-            // Temporarily show names for screenshot
+            const originalText = this.innerHTML; this.innerHTML = '⏳ Menyimpan...';
+            // Show hidden names for screenshot
             const hiddenNames = [];
             document.querySelectorAll('.token:not(.hidden) .t-name').forEach(el => {
-                if(getComputedStyle(el).display === 'none') { 
-                    el.style.display = 'block'; hiddenNames.push(el); 
-                }
+                if(getComputedStyle(el).display === 'none') { el.style.display = 'block'; hiddenNames.push(el); }
             });
-
-            html2canvas(fieldContainer, { 
-                scale: 2, 
-                backgroundColor: null,
-                logging: false,
-                useCORS: true 
-            }).then(canvas => {
+            html2canvas(document.querySelector('.board-wrapper'), { scale: 2, useCORS: true }).then(canvas => {
                 const link = document.createElement('a'); link.download = 'strategi-tim.png';
-                link.href = canvas.toDataURL("image/png"); link.click();
-                this.innerHTML = originalText;
-                hiddenNames.forEach(el => el.style.display = 'none');
-            }).catch(err => {
-                alert('Gagal menyimpan gambar.');
-                this.innerHTML = originalText;
-                hiddenNames.forEach(el => el.style.display = 'none');
+                link.href = canvas.toDataURL(); link.click();
+                this.innerHTML = originalText; hiddenNames.forEach(el => el.style.display = 'none');
             });
         });
 
-        // --- MATCH CARD UPDATER (FIXED LOGIC) ---
-        const inScoreA = document.getElementById('inScoreA');
-        const inScoreB = document.getElementById('inScoreB');
-        const inSponsor = document.getElementById('inSponsor');
+        // --- MATCH CARD UPDATER ---
+        const momSelect = document.getElementById('momSelect');
         const inDate = document.getElementById('inDate');
-        const momInput = document.getElementById('momInput'); // CHANGED: Now Input Text
-        
-        // Set default input to Today YYYY-MM-DD
-        const today = new Date();
-        inDate.value = today.toISOString().split('T')[0];
+        inDate.valueAsDate = new Date(); // Local Date
 
-        function updateCard() {
-            document.getElementById('outScoreA').textContent = inScoreA.value;
-            document.getElementById('outScoreB').textContent = inScoreB.value;
-            document.getElementById('outMom').textContent = momInput.value || "PLAYER NAME"; // CHANGED: Read from input
-            document.getElementById('outSponsor').textContent = inSponsor.value || "Community";
-            
-            // FIXED DATE LOGIC
-            const dateVal = inDate.value;
-            const d = dateVal ? new Date(dateVal) : new Date();
-            document.getElementById('cardDate').textContent = `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`;
+        function updateMomDropdown(players) {
+            momSelect.innerHTML = '<option value="">-- Pilih Pemain --</option>';
+            players.forEach(p => {
+                const opt = document.createElement('option'); opt.value = p.name; opt.textContent = p.name;
+                momSelect.appendChild(opt);
+            });
         }
 
-        [inScoreA, inScoreB, momInput, inSponsor, inDate].forEach(el => el.addEventListener('input', updateCard));
-        updateCard(); // Init
+        function readURL(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    const img = document.getElementById(targetId);
+                    img.src = e.target.result; img.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        document.getElementById('uplLogoA').addEventListener('change', function(){ readURL(this, 'outLogoA'); });
+        document.getElementById('uplLogoB').addEventListener('change', function(){ readURL(this, 'outLogoB'); });
+
+        function updateCard() {
+            document.getElementById('outScoreA').textContent = document.getElementById('inScoreA').value;
+            document.getElementById('outScoreB').textContent = document.getElementById('inScoreB').value;
+            document.getElementById('outMom').textContent = momSelect.value || "PLAYER NAME";
+            document.getElementById('outSponsor').textContent = document.getElementById('inSponsor').value || "Community";
+            const d = inDate.value ? new Date(inDate.value) : new Date();
+            document.getElementById('cardDate').textContent = `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`;
+        }
+        ['inScoreA', 'inScoreB', 'momSelect', 'inSponsor', 'inDate'].forEach(id => document.getElementById(id).addEventListener('input', updateCard));
+        updateCard();
 
         document.getElementById('btnDownloadStory').addEventListener('click', function(){
             const card = document.getElementById('storyCard');
-            html2canvas(card, { scale: 3, useCORS: true }).then(canvas => {
-                const link = document.createElement('a'); 
-                link.download = `MatchResult-${Date.now()}.png`;
-                link.href = canvas.toDataURL("image/png"); 
-                link.click();
+            html2canvas(card, { scale: 3, useCORS: true, backgroundColor: null }).then(canvas => {
+                const link = document.createElement('a'); link.download = `MatchResult-${Date.now()}.png`;
+                link.href = canvas.toDataURL(); link.click();
             });
         });
 
-        // --- DRAG AND DROP ENGINE ---
-        const tokens = document.querySelectorAll('.token');
-        tokens.forEach(token => setupDrag(token));
-
+        // --- DRAG AND DROP ENGINE (FOR TOKENS) ---
+        document.querySelectorAll('.token').forEach(setupDrag);
         function setupDrag(elmnt) {
             let startX, startY, startLeft, startTop;
-
-            elmnt.onmousedown = dragStart;
-            elmnt.ontouchstart = dragStart;
+            elmnt.onmousedown = dragStart; elmnt.ontouchstart = dragStart;
 
             function dragStart(e) {
-                // Jangan preventDefault jika touchstart agar user masih bisa scroll jika tidak kena token
-                // Tapi CSS touch-action:none pada .token menangani ini.
-                
-                if(e.type !== 'touchstart') {
-                    e.preventDefault(); 
-                }
-
-                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-                
-                startX = clientX;
-                startY = clientY;
-                
+                if(document.body.classList.contains('draw-active')) return;
+                if(e.type !== 'touchstart') e.preventDefault();
+                startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
                 const rect = elmnt.getBoundingClientRect();
                 const parentRect = fieldContainer.getBoundingClientRect();
-                
-                startLeft = rect.left - parentRect.left;
-                startTop = rect.top - parentRect.top;
-
-                document.onmouseup = dragEnd;
-                document.onmousemove = dragMove;
-                document.ontouchend = dragEnd;
-                document.ontouchmove = dragMove;
-                
+                startLeft = rect.left - parentRect.left; startTop = rect.top - parentRect.top;
+                document.onmouseup = dragEnd; document.onmousemove = dragMove;
+                document.ontouchend = dragEnd; document.ontouchmove = dragMove;
                 elmnt.classList.add('is-dragging');
             }
-
             function dragMove(e) {
-                // Prevent scrolling while dragging token
                 if (e.cancelable && e.type === 'touchmove') e.preventDefault();
-
                 const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
                 const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-
-                const deltaX = clientX - startX;
-                const deltaY = clientY - startY;
-
-                let newLeft = startLeft + deltaX;
-                let newTop = startTop + deltaY;
-
-                const parentW = fieldContainer.clientWidth;
-                const parentH = fieldContainer.clientHeight;
-                const elW = elmnt.offsetWidth;
-                const elH = elmnt.offsetHeight;
-
-                if(newLeft < 0) newLeft = 0;
-                if(newTop < 0) newTop = 0;
+                const deltaX = clientX - startX; const deltaY = clientY - startY;
+                let newLeft = startLeft + deltaX; let newTop = startTop + deltaY;
+                const parentW = fieldContainer.clientWidth; const parentH = fieldContainer.clientHeight;
+                const elW = elmnt.offsetWidth; const elH = elmnt.offsetHeight;
+                if(newLeft < 0) newLeft = 0; if(newTop < 0) newTop = 0;
                 if(newLeft > parentW - elW) newLeft = parentW - elW;
                 if(newTop > parentH - elH) newTop = parentH - elH;
-
                 elmnt.style.left = (newLeft / parentW * 100) + '%';
                 elmnt.style.top = (newTop / parentH * 100) + '%';
             }
-
             function dragEnd() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-                document.ontouchend = null;
-                document.ontouchmove = null;
+                document.onmouseup = null; document.onmousemove = null;
+                document.ontouchend = null; document.ontouchmove = null;
                 elmnt.classList.remove('is-dragging');
             }
         }
